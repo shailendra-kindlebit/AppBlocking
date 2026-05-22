@@ -21,13 +21,13 @@ Track focus sessions and restricted apps
 
 ## App Preview
 
-![Vigilant](screenshots/screen1.png)
+![AppBlocking](screenshots/screen1.PNG)
 
-![Vigilant](screenshots/screen2.png)
+![AppBlocking](screenshots/screen2.PNG)
 
-![Vigilant](screenshots/screen3.png)
+![AppBlocking](screenshots/screen3.PNG)
 
-![Vigilant](screenshots/screen4.png)
+![AppBlocking](screenshots/screen4.PNG)
 
 
 🛡️ Dynamic App Restrictions
