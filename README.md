@@ -18,6 +18,15 @@ Select apps and websites using Apple’s FamilyControls picker
 Monitor usage activity
 Track focus sessions and restricted apps
 
+
+## App Preview
+
+![AppBlocking](screenshots/screen1.png)
+![AppBlocking](screenshots/screen2.png)
+![AppBlocking](screenshots/screen3.png)
+![AppBlocking](screenshots/screen4.png)
+
+
 🛡️ Dynamic App Restrictions
 Block distracting applications dynamically
 Apply shields during study/work/focus sessions
