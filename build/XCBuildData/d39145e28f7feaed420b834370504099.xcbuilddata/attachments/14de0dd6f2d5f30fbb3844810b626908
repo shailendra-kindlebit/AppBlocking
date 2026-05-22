@@ -1,0 +1,59 @@
+{
+  "" : {
+    "diagnostics" : "/Users/kbs/Desktop/Vigilant/build/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/Vigilant-primary.dia",
+    "emit-module-dependencies" : "/Users/kbs/Desktop/Vigilant/build/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/Vigilant-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/kbs/Desktop/Vigilant/build/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/Vigilant-primary-emit-module.dia",
+    "pch" : "/Users/kbs/Desktop/Vigilant/build/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/Vigilant-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/kbs/Desktop/Vigilant/build/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/Vigilant-primary.swiftdeps"
+  },
+  "/Users/kbs/Desktop/Vigilant/Vigilant/Item.swift" : {
+    "const-values" : "/Users/kbs/Desktop/Vigilant/build/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/Item.swiftconstvalues",
+    "dependencies" : "/Users/kbs/Desktop/Vigilant/build/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/Item.d",
+    "diagnostics" : "/Users/kbs/Desktop/Vigilant/build/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/Item.dia",
+    "index-unit-output-path" : "/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/Item.o",
+    "llvm-bc" : "/Users/kbs/Desktop/Vigilant/build/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/Item.bc",
+    "object" : "/Users/kbs/Desktop/Vigilant/build/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/Item.o",
+    "swift-dependencies" : "/Users/kbs/Desktop/Vigilant/build/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/Item.swiftdeps",
+    "swiftmodule" : "/Users/kbs/Desktop/Vigilant/build/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/Item~partial.swiftmodule"
+  },
+  "/Users/kbs/Desktop/Vigilant/Vigilant/Model/Animatable.swift" : {
+    "const-values" : "/Users/kbs/Desktop/Vigilant/build/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/Animatable.swiftconstvalues",
+    "dependencies" : "/Users/kbs/Desktop/Vigilant/build/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/Animatable.d",
+    "diagnostics" : "/Users/kbs/Desktop/Vigilant/build/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/Animatable.dia",
+    "index-unit-output-path" : "/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/Animatable.o",
+    "llvm-bc" : "/Users/kbs/Desktop/Vigilant/build/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/Animatable.bc",
+    "object" : "/Users/kbs/Desktop/Vigilant/build/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/Animatable.o",
+    "swift-dependencies" : "/Users/kbs/Desktop/Vigilant/build/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/Animatable.swiftdeps",
+    "swiftmodule" : "/Users/kbs/Desktop/Vigilant/build/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/Animatable~partial.swiftmodule"
+  },
+  "/Users/kbs/Desktop/Vigilant/Vigilant/View/ContentView.swift" : {
+    "const-values" : "/Users/kbs/Desktop/Vigilant/build/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/ContentView.swiftconstvalues",
+    "dependencies" : "/Users/kbs/Desktop/Vigilant/build/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/ContentView.d",
+    "diagnostics" : "/Users/kbs/Desktop/Vigilant/build/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/ContentView.dia",
+    "index-unit-output-path" : "/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/ContentView.o",
+    "llvm-bc" : "/Users/kbs/Desktop/Vigilant/build/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/ContentView.bc",
+    "object" : "/Users/kbs/Desktop/Vigilant/build/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/ContentView.o",
+    "swift-dependencies" : "/Users/kbs/Desktop/Vigilant/build/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/ContentView.swiftdeps",
+    "swiftmodule" : "/Users/kbs/Desktop/Vigilant/build/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/ContentView~partial.swiftmodule"
+  },
+  "/Users/kbs/Desktop/Vigilant/Vigilant/VigilantApp.swift" : {
+    "const-values" : "/Users/kbs/Desktop/Vigilant/build/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/VigilantApp.swiftconstvalues",
+    "dependencies" : "/Users/kbs/Desktop/Vigilant/build/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/VigilantApp.d",
+    "diagnostics" : "/Users/kbs/Desktop/Vigilant/build/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/VigilantApp.dia",
+    "index-unit-output-path" : "/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/VigilantApp.o",
+    "llvm-bc" : "/Users/kbs/Desktop/Vigilant/build/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/VigilantApp.bc",
+    "object" : "/Users/kbs/Desktop/Vigilant/build/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/VigilantApp.o",
+    "swift-dependencies" : "/Users/kbs/Desktop/Vigilant/build/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/VigilantApp.swiftdeps",
+    "swiftmodule" : "/Users/kbs/Desktop/Vigilant/build/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/VigilantApp~partial.swiftmodule"
+  },
+  "/Users/kbs/Desktop/Vigilant/build/Vigilant.build/Debug-iphoneos/Vigilant.build/DerivedSources/GeneratedAssetSymbols.swift" : {
+    "const-values" : "/Users/kbs/Desktop/Vigilant/build/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/GeneratedAssetSymbols.swiftconstvalues",
+    "dependencies" : "/Users/kbs/Desktop/Vigilant/build/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/GeneratedAssetSymbols.d",
+    "diagnostics" : "/Users/kbs/Desktop/Vigilant/build/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/GeneratedAssetSymbols.dia",
+    "index-unit-output-path" : "/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "llvm-bc" : "/Users/kbs/Desktop/Vigilant/build/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/GeneratedAssetSymbols.bc",
+    "object" : "/Users/kbs/Desktop/Vigilant/build/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "swift-dependencies" : "/Users/kbs/Desktop/Vigilant/build/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/GeneratedAssetSymbols.swiftdeps",
+    "swiftmodule" : "/Users/kbs/Desktop/Vigilant/build/Vigilant.build/Debug-iphoneos/Vigilant.build/Objects-normal/arm64/GeneratedAssetSymbols~partial.swiftmodule"
+  }
+}

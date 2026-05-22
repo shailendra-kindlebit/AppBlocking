@@ -3,6 +3,7 @@ import Foundation
 #if canImport(FamilyControls) && canImport(ManagedSettings)
 import FamilyControls
 import ManagedSettings
+import Combine
 
 /// Manages FamilyControls and ManagedSettings operations for app authorization and restrictions.
 /// 
@@ -12,7 +13,8 @@ import ManagedSettings
 @MainActor
 final class FamilyControlsManager: ObservableObject {
     
-    @Published var authorizationStatus: AuthorizationCenter.AuthorizationStatus = .notDetermined
+    
+    @Published var authorizationStatus: AuthorizationStatus = .notDetermined
     @Published var selectedApplications: Set<ApplicationToken> = []
     @Published var isRestrictionsApplied: Bool = false
     @Published var lastError: String? = nil
@@ -20,14 +22,94 @@ final class FamilyControlsManager: ObservableObject {
     private let authorizationCenter = AuthorizationCenter.shared
     private let store = ManagedSettingsStore()
     
+    
+    private let defaults =
+    UserDefaults(suiteName: "group.blocking")
+    
+    var isPickerAvailable: Bool {
+        
+        if #available(iOS 16.0, *) {
+            return authorizationStatus == .approved ||
+                   authorizationStatus == .approvedWithDataAccess
+        }
+        
+        return false
+    }
+    
     /// Requests authorization for managing family controls.
+//    func requestAuthorization() async {
+//        do {
+//            try await authorizationCenter.requestAuthorization(for: .individual)
+//            // After requesting, read the current authorization status and map it
+//            let current = authorizationCenter.authorizationStatus
+//            authorizationStatus = Self.mapAuthorizationStatus(current)
+//        } catch {
+//            lastError = "Authorization request failed: \(error.localizedDescription)"
+//            authorizationStatus = .notDetermined
+//        }
+//    }
     func requestAuthorization() async {
+
         do {
-            let status = try await authorizationCenter.requestAuthorization()
-            authorizationStatus = status
+
+            try await authorizationCenter.requestAuthorization(
+                for: .individual
+            )
+
+            authorizationStatus =
+                Self.mapAuthorizationStatus(
+                    authorizationCenter.authorizationStatus
+                )
+
+            print("Authorization:",
+                  authorizationStatus)
+
         } catch {
-            lastError = "Authorization request failed: \(error.localizedDescription)"
-            authorizationStatus = .notDetermined
+
+            print(error)
+        }
+    }
+    func restoreRestrictions() {
+
+        guard let data =
+            defaults?.data(forKey: "savedTokens")
+        else {
+            return
+        }
+
+        do {
+
+            let tokens =
+            try JSONDecoder().decode(
+                Set<ApplicationToken>.self,
+                from: data
+            )
+
+            selectedApplications = tokens
+
+            store.shield.applications =
+            tokens
+
+            isRestrictionsApplied = true
+
+        } catch {
+
+            print("Failed to restore restrictions:", error)
+        }
+    }
+
+    private static func mapAuthorizationStatus(_ status: FamilyControls.AuthorizationStatus) -> AuthorizationStatus {
+        switch status {
+        case .notDetermined:
+            return .notDetermined
+        case .approved:
+            return .approved
+        case .denied:
+            return .denied
+        case .approvedWithDataAccess:
+            return .approvedWithDataAccess
+        @unknown default:
+            return .notDetermined
         }
     }
     
@@ -60,20 +142,63 @@ final class FamilyControlsManager: ObservableObject {
     /// Updates the selected applications after picker selection.
     ///
     /// - Parameter tokens: The set of selected ApplicationToken objects.
-    func updateSelectedApplications(_ tokens: Set<ApplicationToken>) {
+    func updateSelectedApplications(
+        _ tokens: Set<ApplicationToken>
+    ) {
+
+        print(tokens)
+
         selectedApplications = tokens
+
+        do {
+
+            let data =
+            try JSONEncoder().encode(tokens)
+
+            defaults?.set(
+                data,
+                forKey: "savedTokens"
+            )
+
+        } catch {
+
+            print("Failed saving tokens:", error)
+        }
     }
     
     /// Applies blocking restrictions to the selected applications.
     /// Sets the shield applications to the selectedApplications set.
+//    func applyBlockingRestrictions() {
+//        store.shield.applications = selectedApplications
+//        isRestrictionsApplied = true
+//    }
     func applyBlockingRestrictions() {
-        store.shield.applications = selectedApplications
+
+        store.shield.applications =
+            selectedApplications
+
+        defaults?.set(
+            true,
+            forKey: "isBlocked"
+        )
+
         isRestrictionsApplied = true
     }
     
     /// Clears all applied restrictions.
+//    func clearRestrictions() {
+//        store.shield.applications = []
+//        isRestrictionsApplied = false
+//    }
     func clearRestrictions() {
-        store.shield.applications = []
+
+        store.shield.applications = nil
+
+        defaults?.set(
+            false,
+            forKey: "isBlocked"
+        )
+
         isRestrictionsApplied = false
     }
 }
@@ -83,12 +208,21 @@ final class FamilyControlsManager: ObservableObject {
 import os.log
 import Foundation
 
+// Placeholder stand-ins so this file compiles when FamilyControls is unavailable
+enum AuthorizationStatus {
+    case notDetermined
+    case approved
+    case denied
+}
+
+struct ApplicationToken: Hashable {}
+
 /// Stub implementation when FamilyControls and ManagedSettings are unavailable.
 /// Logs usage attempts but allows the app to compile and run on unsupported platforms.
 @MainActor
 final class FamilyControlsManager: ObservableObject {
     
-    @Published var authorizationStatus: AuthorizationCenter.AuthorizationStatus = .notDetermined
+    @Published var authorizationStatus: AuthorizationStatus = .notDetermined
     @Published var selectedApplications: Set<ApplicationToken> = []
     @Published var isRestrictionsApplied: Bool = false
     @Published var lastError: String? = "FamilyControls framework not available on this platform."
@@ -124,3 +258,8 @@ final class FamilyControlsManager: ObservableObject {
     }
 }
 #endif
+
+
+
+
+

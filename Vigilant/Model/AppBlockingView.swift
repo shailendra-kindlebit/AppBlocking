@@ -1,5 +1,7 @@
 import SwiftUI
 import ManagedSettings
+import MapKit
+import CoreLocation
 
 #if canImport(FamilyControls)
 import FamilyControls
@@ -10,6 +12,7 @@ struct AppBlockingView: View {
 
     @StateObject private var policy = BlockPolicyManager()
     @StateObject private var family = FamilyControlsManager()
+    @StateObject private var locationRestrictions = LocationRestrictionManager()
 
     // MARK: - Saved Storage
 
@@ -36,6 +39,14 @@ struct AppBlockingView: View {
     @State private var validationMessage: String?
     @State private var familySelection = FamilyActivitySelection()
     @State private var selectedApplications = Set<ApplicationToken>()
+    @State private var mapPosition: MapCameraPosition = .region(
+        MKCoordinateRegion(
+            center: CLLocationCoordinate2D(latitude: 37.3349, longitude: -122.0090),
+            span: MKCoordinateSpan(latitudeDelta: 0.02, longitudeDelta: 0.02)
+        )
+    )
+    @State private var draftRestrictedCoordinate = CLLocationCoordinate2D(latitude: 37.3349, longitude: -122.0090)
+    @State private var locationRadius: Double = 250
 
     #if canImport(FamilyControls) && canImport(ManagedSettings)
     @State private var isPickerPresented: Bool = false
@@ -84,23 +95,38 @@ struct AppBlockingView: View {
         selectedApplications.count == 1 ? "1 app selected" : "\(selectedApplications.count) apps selected"
     }
 
+    private var locationStatusText: String {
+        guard locationRestrictions.isLocationRestrictionEnabled else {
+            return "Location off"
+        }
+
+        return locationRestrictions.isInsideRestrictedArea ? "Inside zone" : "Outside zone"
+    }
+
+    private var locationStatusColor: Color {
+        guard locationRestrictions.isLocationRestrictionEnabled else {
+            return .white.opacity(0.55)
+        }
+
+        return locationRestrictions.isInsideRestrictedArea ? .orange : .green
+    }
+
     // MARK: - Body
 
     var body: some View {
         NavigationStack {
-            ZStack {
-                backgroundView
+            GeometryReader { proxy in
+                ZStack {
+                    backgroundView
 
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 18) {
-                        headerView
-
-                        inAppBlockingCard
-
-                        systemBlockingCard
+                    ScrollView {
+                        contentLayout(for: proxy.size.width)
+                            .frame(maxWidth: min(proxy.size.width - horizontalPadding(for: proxy.size.width) * 2, 1040))
+                            .frame(maxWidth: .infinity)
+                            .padding(.horizontal, horizontalPadding(for: proxy.size.width))
+                            .padding(.vertical, verticalPadding(for: proxy.size.width))
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 24)
+                    .scrollIndicators(.hidden)
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
@@ -165,6 +191,12 @@ struct AppBlockingView: View {
             .onChange(of: family.lastError) {
                 showError = family.lastError != nil
             }
+            .onChange(of: locationRestrictions.lastError) { oldValue, newValue in
+                validationMessage = newValue
+            }
+            .onChange(of: locationRestrictions.isInsideRestrictedArea) { oldValue, newValue in
+                updateLocationBasedRestrictions(isInsideRestrictedArea: newValue)
+            }
             #if canImport(FamilyControls) && canImport(ManagedSettings)
             .sheet(isPresented: $isPickerPresented) {
                 NavigationStack {
@@ -172,7 +204,7 @@ struct AppBlockingView: View {
                         selection: $familySelection
                     )
                     .navigationTitle("Select Apps")
-                    .onChange(of: familySelection) { newValue in
+                    .onChange(of: familySelection) { oldValue, newValue in
                         selectedApplications = Set(newValue.applicationTokens)
                     }
                     .toolbar {
@@ -209,12 +241,41 @@ struct AppBlockingView: View {
 
     // MARK: - Views
 
+    @ViewBuilder
+    private func contentLayout(for width: CGFloat) -> some View {
+        VStack(alignment: .leading, spacing: width >= 760 ? 22 : 18) {
+            headerView
+
+            if width >= 760 {
+                VStack(alignment: .leading, spacing: 20) {
+                    HStack(alignment: .top, spacing: 20) {
+                        inAppBlockingCard
+                            .frame(maxWidth: .infinity, alignment: .top)
+
+                        systemBlockingCard
+                            .frame(maxWidth: .infinity, alignment: .top)
+                    }
+
+                    locationBlockingCard
+                }
+            } else {
+                VStack(alignment: .leading, spacing: 18) {
+                    inAppBlockingCard
+
+                    systemBlockingCard
+
+                    locationBlockingCard
+                }
+            }
+        }
+    }
+
     private var backgroundView: some View {
         LinearGradient(
             colors: [
-                Color(red: 0.05, green: 0.07, blue: 0.10),
-                Color(red: 0.09, green: 0.18, blue: 0.24),
-                Color(red: 0.18, green: 0.12, blue: 0.22)
+                Color.black,
+                Color.blue.opacity(0.8),
+                Color.purple
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
@@ -223,28 +284,28 @@ struct AppBlockingView: View {
     }
 
     private var headerView: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(spacing: 14) {
-                Image(systemName: "shield.lefthalf.filled")
-                    .font(.system(size: 28, weight: .semibold))
-                    .foregroundColor(.white)
-                    .frame(width: 52, height: 52)
-                    .background(Color.white.opacity(0.14))
-                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        VStack(alignment: .leading, spacing: 16) {
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .center, spacing: 16) {
+                    headerIcon
 
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("App Blocking")
-                        .font(.largeTitle.bold())
-                        .foregroundColor(.white)
+                    headerText
 
-                    Text("Validate passcodes and app selections before restrictions are applied.")
-                        .font(.subheadline)
-                        .foregroundColor(.white.opacity(0.72))
-                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 0)
+                }
+
+                VStack(alignment: .leading, spacing: 12) {
+                    headerIcon
+
+                    headerText
                 }
             }
 
-            HStack(spacing: 10) {
+            LazyVGrid(
+                columns: [GridItem(.adaptive(minimum: 142), spacing: 10)],
+                alignment: .leading,
+                spacing: 10
+            ) {
                 statusPill(
                     title: policy.isBlocked ? "In-app blocked" : "In-app open",
                     icon: policy.isBlocked ? "lock.fill" : "lock.open.fill",
@@ -256,7 +317,68 @@ struct AppBlockingView: View {
                     icon: family.isRestrictionsApplied ? "shield.fill" : "shield",
                     color: family.isRestrictionsApplied ? .green : .white.opacity(0.55)
                 )
+
+                statusPill(
+                    title: selectedAppCountText,
+                    icon: "app.dashed",
+                    color: selectedApplications.isEmpty ? .white.opacity(0.55) : .cyan
+                )
+
+                statusPill(
+                    title: locationStatusText,
+                    icon: "location.circle.fill",
+                    color: locationStatusColor
+                )
             }
+        }
+        .padding(18)
+        .background(
+            LinearGradient(
+                colors: [
+                    Color.white.opacity(0.18),
+                    Color.white.opacity(0.08)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .stroke(Color.white.opacity(0.20), lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+    }
+
+    private var headerIcon: some View {
+        Image(systemName: "shield.lefthalf.filled")
+            .font(.system(size: 30, weight: .semibold))
+            .foregroundColor(.white)
+            .frame(width: 56, height: 56)
+            .background(
+                LinearGradient(
+                    colors: [
+                        Color.cyan.opacity(0.42),
+                        Color.pink.opacity(0.34)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 17, style: .continuous))
+    }
+
+    private var headerText: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text("App Blocking")
+                .font(.largeTitle.bold())
+                .foregroundColor(.white)
+                .lineLimit(1)
+                .minimumScaleFactor(0.76)
+
+            Text("Validate passcodes and app selections before restrictions are applied.")
+                .font(.subheadline)
+                .foregroundColor(.white.opacity(0.72))
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 
@@ -297,7 +419,11 @@ struct AppBlockingView: View {
                 Divider()
                     .overlay(Color.white.opacity(0.18))
 
-                HStack(spacing: 12) {
+                LazyVGrid(
+                    columns: [GridItem(.adaptive(minimum: 128), spacing: 12)],
+                    alignment: .leading,
+                    spacing: 12
+                ) {
                     metricTile(
                         value: "\(selectedApplications.count)",
                         label: "Selected"
@@ -309,7 +435,11 @@ struct AppBlockingView: View {
                     )
                 }
 
-                VStack(spacing: 12) {
+                LazyVGrid(
+                    columns: [GridItem(.adaptive(minimum: 210), spacing: 12)],
+                    alignment: .leading,
+                    spacing: 12
+                ) {
                     ActionButton(
                         title: "Request Authorization",
                         icon: "lock.shield",
@@ -348,6 +478,148 @@ struct AppBlockingView: View {
                 }
             }
         }
+    }
+
+    private var locationBlockingCard: some View {
+        SettingsCard(
+            title: "Location Blocking",
+            subtitle: "Choose a map location and automatically shield selected apps inside that area.",
+            icon: "map.fill"
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                locationMapView
+
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("Radius")
+                            .font(.caption.weight(.semibold))
+                            .foregroundColor(.white.opacity(0.68))
+                            .textCase(.uppercase)
+
+                        Spacer()
+
+                        Text("\(Int(locationRadius)) m")
+                            .font(.caption.weight(.semibold))
+                            .foregroundColor(.white)
+                    }
+
+                    Slider(value: $locationRadius, in: 100...1000, step: 50)
+                        .tint(.cyan)
+                }
+
+                LazyVGrid(
+                    columns: [GridItem(.adaptive(minimum: 150), spacing: 12)],
+                    alignment: .leading,
+                    spacing: 12
+                ) {
+                    metricTile(
+                        value: locationRestrictions.canTrackLocation ? "Allowed" : "Needed",
+                        label: "Location"
+                    )
+
+                    metricTile(
+                        value: locationRestrictions.isInsideRestrictedArea ? "Inside" : "Outside",
+                        label: "Current Area"
+                    )
+
+                    metricTile(
+                        value: "\(selectedApplications.count)",
+                        label: "Apps on Map"
+                    )
+                }
+
+                LazyVGrid(
+                    columns: [GridItem(.adaptive(minimum: 210), spacing: 12)],
+                    alignment: .leading,
+                    spacing: 12
+                ) {
+                    ActionButton(
+                        title: "Allow Location",
+                        icon: "location.fill",
+                        style: .secondary
+                    ) {
+                        locationRestrictions.requestLocationPermission()
+                    }
+
+                    ActionButton(
+                        title: "Use Map Center",
+                        icon: "mappin.and.ellipse",
+                        style: .primary,
+                        isDisabled: selectedApplications.isEmpty
+                    ) {
+                        saveLocationRestriction()
+                    }
+
+                    ActionButton(
+                        title: "Clear Location Rule",
+                        icon: "xmark.circle.fill",
+                        style: .destructive,
+                        isDisabled: locationRestrictions.restriction == nil
+                    ) {
+                        clearLocationRestriction()
+                    }
+                }
+
+                Text(locationHelpText)
+                    .font(.caption)
+                    .foregroundColor(.white.opacity(0.64))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+
+    private var locationMapView: some View {
+        ZStack {
+            Map(position: $mapPosition) {
+                UserAnnotation()
+
+                if let restriction = locationRestrictions.restriction {
+                    MapCircle(center: restriction.coordinate, radius: restriction.radius)
+                        .foregroundStyle(Color.red.opacity(0.18))
+                        .stroke(Color.red.opacity(0.72), lineWidth: 2)
+
+                    Annotation("Restricted Apps", coordinate: restriction.coordinate) {
+                        restrictedMapBadge(appCount: restriction.appCount)
+                    }
+                }
+
+                Marker("Selected Location", coordinate: draftRestrictedCoordinate)
+                    .tint(.cyan)
+            }
+            .mapStyle(.standard(elevation: .realistic))
+            .mapControls {
+                MapCompass()
+                MapScaleView()
+                MapUserLocationButton()
+            }
+            .onMapCameraChange(frequency: .onEnd) { context in
+                draftRestrictedCoordinate = context.camera.centerCoordinate
+            }
+
+            Image(systemName: "plus")
+                .font(.system(size: 24, weight: .bold))
+                .foregroundColor(.white)
+                .shadow(radius: 4)
+                .allowsHitTesting(false)
+        }
+        .frame(height: 260)
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(Color.white.opacity(0.20), lineWidth: 1)
+        )
+    }
+
+    private var locationHelpText: String {
+        if selectedApplications.isEmpty {
+            return "Pick apps first, then move the map and save the center as the restricted location."
+        }
+
+        if locationRestrictions.restriction == nil {
+            return "Move the map so the crosshair is over the restricted area, then save the map center."
+        }
+
+        return "The saved map marker shows where \(selectedAppCountText) will be restricted when this device enters the selected radius."
     }
 
     private var statusRow: some View {
@@ -423,6 +695,10 @@ struct AppBlockingView: View {
             family.restoreRestrictions()
             selectedApplications = family.selectedApplications
         }
+
+        locationRestrictions.updateAppCount(selectedApplications.count)
+        restoreMapPosition()
+        locationRestrictions.startLocationUpdates()
     }
 
     private func validatePasscodeRequirement() -> Bool {
@@ -468,6 +744,7 @@ struct AppBlockingView: View {
         }
 
         family.updateSelectedApplications(selectedApplications)
+        locationRestrictions.updateAppCount(selectedApplications.count)
         savedRestrictionsApplied = family.isRestrictionsApplied
         validationMessage = nil
 
@@ -506,7 +783,99 @@ struct AppBlockingView: View {
         savedRestrictionsApplied = false
     }
 
+    private func saveLocationRestriction() {
+        guard !selectedApplications.isEmpty else {
+            validationMessage = "Pick at least one app before saving a location restriction."
+            return
+        }
+
+        guard locationRestrictions.canTrackLocation else {
+            validationMessage = "Allow location access before saving a location restriction."
+            locationRestrictions.requestLocationPermission()
+            return
+        }
+
+        locationRestrictions.saveRestriction(
+            coordinate: draftRestrictedCoordinate,
+            radius: locationRadius,
+            appCount: selectedApplications.count
+        )
+        updateLocationBasedRestrictions(isInsideRestrictedArea: locationRestrictions.isInsideRestrictedArea)
+    }
+
+    private func clearLocationRestriction() {
+        locationRestrictions.clearRestriction()
+
+        if family.isRestrictionsApplied {
+            family.clearRestrictions()
+            savedRestrictionsApplied = false
+        }
+    }
+
+    private func updateLocationBasedRestrictions(isInsideRestrictedArea: Bool) {
+        guard locationRestrictions.isLocationRestrictionEnabled,
+              locationRestrictions.restriction != nil,
+              !selectedApplications.isEmpty else {
+            return
+        }
+
+        if isInsideRestrictedArea {
+            guard validateSystemBlocking() else {
+                return
+            }
+
+            family.updateSelectedApplications(selectedApplications)
+            family.applyBlockingRestrictions()
+            savedRestrictionsApplied = true
+        } else if family.isRestrictionsApplied {
+            family.clearRestrictions()
+            savedRestrictionsApplied = false
+        }
+    }
+
+    private func restoreMapPosition() {
+        let coordinate = locationRestrictions.restriction?.coordinate
+            ?? locationRestrictions.currentCoordinate
+            ?? draftRestrictedCoordinate
+
+        draftRestrictedCoordinate = coordinate
+        locationRadius = locationRestrictions.restriction?.radius ?? locationRadius
+        mapPosition = .region(
+            MKCoordinateRegion(
+                center: coordinate,
+                span: MKCoordinateSpan(latitudeDelta: 0.02, longitudeDelta: 0.02)
+            )
+        )
+    }
+
     // MARK: - Helpers
+
+    private func restrictedMapBadge(appCount: Int) -> some View {
+        VStack(spacing: 4) {
+            Image(systemName: "shield.fill")
+                .font(.caption.weight(.bold))
+
+            Text(appCount == 1 ? "1 app" : "\(appCount) apps")
+                .font(.caption2.weight(.bold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+        }
+        .foregroundColor(.white)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(
+            LinearGradient(
+                colors: [
+                    Color.red.opacity(0.92),
+                    Color.purple.opacity(0.88)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .shadow(color: .black.opacity(0.28), radius: 8, y: 4)
+    }
 
     private func statusPill(
         title: String,
@@ -549,8 +918,36 @@ struct AppBlockingView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(14)
-        .background(Color.white.opacity(0.10))
+        .background(
+            LinearGradient(
+                colors: [
+                    Color.white.opacity(0.15),
+                    Color.white.opacity(0.07)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(Color.white.opacity(0.13), lineWidth: 1)
+        )
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+
+    private func horizontalPadding(for width: CGFloat) -> CGFloat {
+        switch width {
+        case ..<380:
+            return 14
+        case ..<760:
+            return 20
+        default:
+            return 28
+        }
+    }
+
+    private func verticalPadding(for width: CGFloat) -> CGFloat {
+        width >= 760 ? 32 : 22
     }
 }
 
@@ -695,10 +1092,20 @@ struct SettingsCard<Content: View>: View {
             content
         }
         .padding(18)
-        .background(Color.white.opacity(0.11))
+        .background(
+            LinearGradient(
+                colors: [
+                    Color.white.opacity(0.16),
+                    Color.white.opacity(0.08),
+                    Color.cyan.opacity(0.07)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
         .overlay(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(Color.white.opacity(0.18), lineWidth: 1)
+                .stroke(Color.white.opacity(0.20), lineWidth: 1)
         )
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
@@ -770,8 +1177,8 @@ struct ActionButton: View {
             }
             .foregroundColor(.white)
             .padding(.horizontal, 16)
-            .frame(minHeight: 50)
-            .background(backgroundColor)
+            .frame(maxWidth: .infinity, minHeight: 50)
+            .background(backgroundGradient)
             .overlay(
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .stroke(borderColor, lineWidth: 1)
@@ -783,16 +1190,44 @@ struct ActionButton: View {
         .buttonStyle(.plain)
     }
 
-    private var backgroundColor: Color {
+    private var backgroundGradient: LinearGradient {
         switch style {
         case .primary:
-            return Color(red: 0.12, green: 0.38, blue: 0.48)
+            return LinearGradient(
+                colors: [
+                    Color(red: 0.05, green: 0.44, blue: 0.55),
+                    Color(red: 0.26, green: 0.28, blue: 0.70)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
         case .secondary:
-            return Color.white.opacity(0.14)
+            return LinearGradient(
+                colors: [
+                    Color.white.opacity(0.18),
+                    Color.white.opacity(0.09)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
         case .destructive:
-            return Color(red: 0.58, green: 0.16, blue: 0.16)
+            return LinearGradient(
+                colors: [
+                    Color(red: 0.64, green: 0.16, blue: 0.18),
+                    Color(red: 0.42, green: 0.08, blue: 0.19)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
         case .warning:
-            return Color(red: 0.68, green: 0.34, blue: 0.10)
+            return LinearGradient(
+                colors: [
+                    Color(red: 0.74, green: 0.36, blue: 0.10),
+                    Color(red: 0.74, green: 0.18, blue: 0.22)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
         }
     }
 

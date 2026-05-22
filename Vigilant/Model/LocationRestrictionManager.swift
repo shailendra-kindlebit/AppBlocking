@@ -1,6 +1,7 @@
 import Foundation
 import CoreLocation
 import MapKit
+import Combine
 
 struct LocationRestriction: Identifiable, Codable, Equatable {
     let id: UUID

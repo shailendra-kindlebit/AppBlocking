@@ -2,9 +2,15 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Vigilant uses your location to apply app restrictions when you enter a selected area.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
 	</array>
+    <key>NSUserTrackingUsageDescription</key>
+    <string>This app manages app restrictions.</string>
+    <key>com.apple.developer.family-controls</key>
+    <true/>
 </dict>
 </plist>

@@ -73,10 +73,18 @@ public struct BlockingOverlayView: View {
                         .accessibilityHint("Attempt to unlock with entered passcode")
                         
                         if failedAttempt {
-                            Text("Incorrect passcode. Please try again.")
-                                .foregroundColor(.red)
-                                .font(.footnote)
-                                .accessibilityLiveRegion(.polite)
+                            if #available(iOS 17.0, *) {
+
+                                Text("Incorrect passcode. Please try again.")
+                                    .foregroundColor(.red)
+                                    .font(.footnote)
+
+                            } else {
+
+                                Text("Incorrect passcode. Please try again.")
+                                    .foregroundColor(.red)
+                                    .font(.footnote)
+                            }
                         }
                     }
                 }
@@ -114,7 +122,7 @@ fileprivate struct VisualEffectView: UIViewRepresentable {
     }
 }
 
-#Preview {
+
     struct PreviewWrapper: View {
         @State private var isPresented = true
         @State private var unlocked = false
@@ -153,5 +161,3 @@ fileprivate struct VisualEffectView: UIViewRepresentable {
         }
     }
     
-    PreviewWrapper()
-}
